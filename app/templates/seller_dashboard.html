@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% import "macros.html" as m %}
-{% block title %}Mijn advertenties — SecondScent{% endblock %}
+{% block title %}Mijn advertenties · SecondScent{% endblock %}
 {% block content %}
 <div class="wrap">
   <div class="page-head">
@@ -12,7 +12,7 @@
   <div class="panel">
     <h2>Uitbetalingen</h2>
     {% if payments_are_fake %}
-    <p class="small-muted" style="margin-bottom:12px;">Er is nog geen Stripe Connect-koppeling. Een koper kan pas betaling vrijgeven zodra dat geregeld is. Er is geen echte Stripe-koppeling in deze omgeving — onderstaande knop simuleert een afgeronde koppeling.</p>
+    <p class="small-muted" style="margin-bottom:12px;">Er is nog geen Stripe Connect-koppeling. Een koper kan pas betaling vrijgeven zodra dat geregeld is. Er is geen echte Stripe-koppeling in deze omgeving: onderstaande knop simuleert een afgeronde koppeling.</p>
     <div class="flash flash-error" id="payoutError" hidden></div>
     <button id="enablePayoutsBtn" class="btn btn-outline">Stripe Connect-koppeling simuleren</button>
     {% else %}

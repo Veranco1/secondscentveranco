@@ -16,13 +16,13 @@
     <div class="trust-strip-inner">
       {% for _ in range(2) %}
       <div class="trust-strip-set">
-        <span class="trust-item">Elke fles gecontroleerd op echtheid</span>
+        <span class="trust-item"><span class="trust-icon">✓</span>{{ t('trust_1') }}</span>
         <span class="trust-divider">·</span>
-        <span class="trust-item">Kopersbescherming op elke bestelling</span>
+        <span class="trust-item"><span class="trust-icon">🛡</span>{{ t('trust_2') }}</span>
         <span class="trust-divider">·</span>
-        <span class="trust-item trust-rating">4.8 gemiddelde beoordeling</span>
+        <span class="trust-item trust-rating"><span class="trust-icon">★</span>{{ t('trust_3') }}</span>
         <span class="trust-divider">·</span>
-        <span class="trust-item">Gratis adverteren — geen kosten</span>
+        <span class="trust-item"><span class="trust-icon">🌿</span>{{ t('trust_4') }}</span>
         <span class="trust-divider">·</span>
       </div>
       {% endfor %}
@@ -38,13 +38,18 @@
         </span>
       </a>
       <div class="logo-bar-right">
+        <div class="lang-switch">
+          <a href="{{ url_for('web.set_language', lang='nl') }}" class="{{ 'is-active' if current_lang() == 'nl' else '' }}">NL</a>
+          <span class="lang-sep">/</span>
+          <a href="{{ url_for('web.set_language', lang='en') }}" class="{{ 'is-active' if current_lang() == 'en' else '' }}">EN</a>
+        </div>
         {% if current_user %}
-          <a href="{{ url_for('web.sell_new') }}" class="btn btn-outline btn-sm">Verkoop nu</a>
+          <a href="{{ url_for('web.sell_new') }}" class="btn btn-outline btn-sm">{{ t('sell_now') }}</a>
           <a href="{{ url_for('web.account_orders') }}" class="nav-signin">{{ current_user.display_name }}</a>
-          <a href="#" id="logoutLink" class="nav-signin">Uitloggen</a>
+          <a href="#" id="logoutLink" class="nav-signin">{{ t('logout') }}</a>
         {% else %}
-          <a href="{{ url_for('web.sell_new') }}" class="btn btn-outline btn-sm">Verkoop nu</a>
-          <a href="{{ url_for('web.login') }}" class="nav-signin">Inloggen</a>
+          <a href="{{ url_for('web.sell_new') }}" class="btn btn-outline btn-sm">{{ t('sell_now') }}</a>
+          <a href="{{ url_for('web.login') }}" class="nav-signin">{{ t('login') }}</a>
         {% endif %}
       </div>
     </div>
@@ -52,14 +57,14 @@
 
   <nav class="search-nav">
     <div class="wrap search-nav-inner">
-      <a href="{{ url_for('web.index') }}" class="nav-link">Ontdekken</a>
-      <a href="{{ url_for('web.index') }}#how" class="nav-link">Hoe het werkt</a>
-      <a href="{{ url_for('web.sell_new') }}" class="nav-link">Verkopen</a>
+      <a href="{{ url_for('web.index') }}" class="nav-link">{{ t('nav_discover') }}</a>
+      <a href="{{ url_for('web.index') }}#how" class="nav-link">{{ t('nav_how') }}</a>
+      <a href="{{ url_for('web.sell_new') }}" class="nav-link">{{ t('nav_sell') }}</a>
       {% if current_user %}
-        <a href="{{ url_for('web.account_orders') }}" class="nav-link">Mijn aankopen</a>
-        <a href="{{ url_for('web.seller_dashboard') }}" class="nav-link">Mijn advertenties</a>
+        <a href="{{ url_for('web.account_orders') }}" class="nav-link">{{ t('nav_my_purchases') }}</a>
+        <a href="{{ url_for('web.seller_dashboard') }}" class="nav-link">{{ t('nav_my_listings') }}</a>
         {% if current_user.is_admin %}
-          <a href="{{ url_for('web.admin_queue') }}" class="nav-link">Beheer</a>
+          <a href="{{ url_for('web.admin_queue') }}" class="nav-link">{{ t('nav_admin') }}</a>
         {% endif %}
       {% endif %}
     </div>
@@ -87,31 +92,31 @@
           <img src="{{ url_for('static', filename='img/logo.png') }}" alt="SecondScent" class="logo-mark">
           <span>Second<span class="dot">Scent</span></span>
         </a>
-        <p>De marktplaats voor tweedehands parfum tussen mensen — elke fles gecontroleerd voordat hij verzonden wordt.</p>
+        <p>{{ t('footer_tagline') }}</p>
       </div>
       <div class="footer-col">
-        <h4>Marktplaats</h4>
-        <a href="{{ url_for('web.index') }}">Ontdekken</a>
-        <a href="{{ url_for('web.sell_new') }}">Verkopen</a>
+        <h4>{{ t('footer_col_marketplace') }}</h4>
+        <a href="{{ url_for('web.index') }}">{{ t('nav_discover') }}</a>
+        <a href="{{ url_for('web.sell_new') }}">{{ t('nav_sell') }}</a>
       </div>
       <div class="footer-col">
-        <h4>Account</h4>
+        <h4>{{ t('footer_col_account') }}</h4>
         {% if current_user %}
-          <a href="{{ url_for('web.account_orders') }}">Mijn aankopen</a>
-          <a href="{{ url_for('web.seller_dashboard') }}">Mijn advertenties</a>
+          <a href="{{ url_for('web.account_orders') }}">{{ t('nav_my_purchases') }}</a>
+          <a href="{{ url_for('web.seller_dashboard') }}">{{ t('nav_my_listings') }}</a>
         {% else %}
-          <a href="{{ url_for('web.login') }}">Inloggen</a>
-          <a href="{{ url_for('web.register') }}">Account aanmaken</a>
+          <a href="{{ url_for('web.login') }}">{{ t('login') }}</a>
+          <a href="{{ url_for('web.register') }}">{{ t('footer_account_create') }}</a>
         {% endif %}
       </div>
       <div class="footer-col">
-        <h4>Vertrouwen</h4>
-        <span class="small-muted">Echtheidscontrole en kopersbescherming op elke bestelling — zie de statuslegenda op elke advertentie.</span>
+        <h4>{{ t('footer_col_trust') }}</h4>
+        <span class="small-muted">{{ t('footer_trust_text') }}</span>
       </div>
     </div>
     <div class="footer-bottom">
-      <span>© SecondScent</span>
-      <span>Demo-omgeving — betalingen lopen via een gesimuleerde Stripe-koppeling, geen echt geld.</span>
+      <span>{{ t('footer_copyright') }}</span>
+      <span>{{ t('footer_demo_note') }}</span>
     </div>
   </div>
 </footer>

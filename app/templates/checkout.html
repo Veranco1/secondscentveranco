@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% import "macros.html" as m %}
-{% block title %}Afrekenen — SecondScent{% endblock %}
+{% block title %}Afrekenen · SecondScent{% endblock %}
 {% block content %}
 <div class="wrap-narrow">
   <div class="page-head">
@@ -21,7 +21,7 @@
       {% endif %}
       <div class="price-line total"><span>Totaal</span><span>{{ m.money(totals.total_price_cents) }}</span></div>
     </div>
-    <p class="small-muted" style="margin-top:12px;">Deze prijs is volledig server-side berekend — niets uit deze pagina wordt door de server overgenomen.</p>
+    <p class="small-muted" style="margin-top:12px;">Deze prijs is volledig server-side berekend: niets uit deze pagina wordt door de server overgenomen.</p>
   </div>
 
   <div class="panel" id="payPanel">
@@ -31,7 +31,7 @@
       <p class="small-muted" style="margin-bottom:14px;">Demo-omgeving: er is geen echte Stripe-koppeling. Klik hieronder om de bestelling te plaatsen en de betaling direct als gelukt te simuleren.</p>
     {% endif %}
     <div class="flash flash-error" id="checkoutError" hidden></div>
-    <button id="payBtn" class="btn btn-orange btn-block">Bestelling plaatsen — {{ m.money(totals.total_price_cents) }}</button>
+    <button id="payBtn" class="btn btn-orange btn-block">Bestelling plaatsen · {{ m.money(totals.total_price_cents) }}</button>
   </div>
 </div>
 {% endblock %}

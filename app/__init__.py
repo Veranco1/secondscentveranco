@@ -11,6 +11,7 @@ from app.payments import webhooks_bp
 from app.admin import admin_bp
 from app.listings import listings_bp
 from app.web import web_bp
+from app.i18n import t as _t, get_lang as _get_lang
 
 
 def create_app(test_config=None):
@@ -34,6 +35,9 @@ def create_app(test_config=None):
     app.register_blueprint(admin_bp)
     app.register_blueprint(listings_bp)
     app.register_blueprint(web_bp)
+
+    app.jinja_env.globals["t"] = _t
+    app.jinja_env.globals["current_lang"] = _get_lang
 
     @app.template_filter("datetimeformat")
     def datetimeformat(value):

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Verkopen — SecondScent{% endblock %}
+{% block title %}Verkopen · SecondScent{% endblock %}
 {% block content %}
 <div class="wrap-narrow">
   <div class="page-head">
@@ -20,7 +20,7 @@
   {% elif need_seller %}
   <div class="panel empty-state">
     <h3>Word verkoper</h3>
-    <p>Je account is nog niet ingesteld als verkoper. Dat kost één klik — uitbetalingen vereisen daarna nog een (hier niet gesimuleerde) Stripe Connect-koppeling.</p>
+    <p>Je account is nog niet ingesteld als verkoper. Dat kost één klik. Uitbetalingen vereisen daarna nog een (hier niet gesimuleerde) Stripe Connect-koppeling.</p>
     <div class="form-actions" style="justify-content:center;">
       <button id="becomeSellerBtn" class="btn btn-orange">Word verkoper</button>
     </div>
@@ -83,7 +83,7 @@
       <div class="field">
         <label for="batch_code">Batchcode (zoals op de fles)</label>
         <input type="text" id="batch_code" name="batch_code" placeholder="Optioneel, maar sterk aanbevolen">
-        <div class="hint">Een batchcode is geen bewijs van echtheid — het is één van meerdere signalen die worden meegewogen.</div>
+        <div class="hint">Een batchcode is geen bewijs van echtheid: het is één van meerdere signalen die worden meegewogen.</div>
       </div>
       <div class="field">
         <label for="description">Omschrijving</label>

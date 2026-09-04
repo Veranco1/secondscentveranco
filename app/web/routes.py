@@ -82,6 +82,17 @@ PAYMENTS_ARE_FAKE = os.environ.get("PAYMENTS_MODE", "fake") != "live"
 # ---------------------------------------------------------------------
 # Home / browse
 # ---------------------------------------------------------------------
+@web_bp.route("/taal/<lang>")
+def set_language(lang):
+    from app.i18n import SUPPORTED_LANGUAGES
+    if lang in SUPPORTED_LANGUAGES:
+        session["lang"] = lang
+    dest = request.referrer
+    if not dest or request.host not in dest:
+        dest = url_for("web.index")
+    return redirect(dest)
+
+
 @web_bp.route("/")
 def index():
     conn = get_db()

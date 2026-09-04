@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% import "macros.html" as m %}
-{% block title %}{{ listing.brand }} {{ listing.perfume_name }} — Beheer{% endblock %}
+{% block title %}{{ listing.brand }} {{ listing.perfume_name }} · Beheer{% endblock %}
 {% block content %}
 <div class="wrap">
   <div class="page-head">
@@ -46,7 +46,7 @@
         </ul>
         {% endif %}
         {% if meets_verified_standard.high_weight_signals_needing_explanation %}
-        <p class="small-muted" style="margin-top:10px;">Onopgeloste zware signalen — goedkeuren vereist een toelichting: {{ meets_verified_standard.high_weight_signals_needing_explanation | join(', ') }}</p>
+        <p class="small-muted" style="margin-top:10px;">Onopgeloste zware signalen (goedkeuren vereist een toelichting): {{ meets_verified_standard.high_weight_signals_needing_explanation | join(', ') }}</p>
         {% endif %}
       </div>
 

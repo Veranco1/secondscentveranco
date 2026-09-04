@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% import "macros.html" as m %}
-{% block title %}{{ listing.brand }} {{ listing.perfume_name }} beheren — SecondScent{% endblock %}
+{% block title %}{{ listing.brand }} {{ listing.perfume_name }} beheren · SecondScent{% endblock %}
 {% block content %}
 <div class="wrap">
   <div class="page-head">
@@ -123,7 +123,7 @@
       return;
     }
     ok.hidden = false;
-    ok.textContent = 'Ingediend. Status: ' + data.verification_status + (data.published ? ' — advertentie is live.' : ' — nog niet zichtbaar voor kopers.');
+    ok.textContent = 'Ingediend. Status: ' + data.verification_status + (data.published ? '. Advertentie is live.' : '. Nog niet zichtbaar voor kopers.');
     setTimeout(function () { window.location.reload(); }, 1400);
   });
 })();

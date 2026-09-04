@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% import "macros.html" as m %}
-{% block title %}Geschil — SecondScent{% endblock %}
+{% block title %}Geschil · SecondScent{% endblock %}
 {% block content %}
 <div class="wrap-narrow">
   <div class="page-head">
@@ -42,7 +42,7 @@
   {% if dispute.status == 'open' %}
   <div class="panel">
     <h2>Toelichting toevoegen</h2>
-    <p class="small-muted" style="margin-bottom:10px;">Foto-bewijs voor een geschil verloopt in deze versie buiten de site om (er is nog geen losse upload-voorziening voor geschillen — alleen voor advertentiefoto's); hieronder kun je wel een schriftelijke toelichting toevoegen.</p>
+    <p class="small-muted" style="margin-bottom:10px;">Foto-bewijs voor een geschil verloopt in deze versie buiten de site om (er is nog geen losse upload-voorziening voor geschillen, alleen voor advertentiefoto's); hieronder kun je wel een schriftelijke toelichting toevoegen.</p>
     <form id="evidenceForm">
       <div class="field"><textarea id="evidence_text" required placeholder="Voeg een toelichting toe…"></textarea></div>
       <div class="flash flash-error" id="evidenceError" hidden></div>

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% import "macros.html" as m %}
-{% block title %}Instellingen — SecondScent Beheer{% endblock %}
+{% block title %}Instellingen · SecondScent Beheer{% endblock %}
 {% block content %}
 <div class="wrap">
   <div class="page-head"><h1>Beheer</h1></div>
@@ -17,7 +17,7 @@
         {% for fr in fee_rules %}
         <form class="feeForm" data-fee-key="{{ fr.fee_key }}" style="margin-bottom:16px;">
           <div class="field-row">
-            <div class="field"><label>{{ fr.fee_key }} — percentage (bps)</label><input type="number" name="percentage_bps" value="{{ fr.percentage_bps }}"></div>
+            <div class="field"><label>{{ fr.fee_key }} · percentage (bps)</label><input type="number" name="percentage_bps" value="{{ fr.percentage_bps }}"></div>
             <div class="field"><label>Vast bedrag (cent)</label><input type="number" name="fixed_cents" value="{{ fr.fixed_cents }}"></div>
           </div>
           <button type="submit" class="btn btn-outline btn-sm">Opslaan</button>

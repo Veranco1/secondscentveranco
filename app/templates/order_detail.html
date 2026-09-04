@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% import "macros.html" as m %}
-{% block title %}Bestelling — SecondScent{% endblock %}
+{% block title %}Bestelling · SecondScent{% endblock %}
 {% block content %}
 <div class="wrap-narrow">
   <div class="page-head">
@@ -26,7 +26,7 @@
   {% if is_buyer and order.status == 'payment_pending' and payments_are_fake %}
   <div class="panel">
     <h2>Betaling</h2>
-    <p class="small-muted" style="margin-bottom:14px;">Demo: geen echte Stripe-koppeling — simuleer hieronder een geslaagde betaling.</p>
+    <p class="small-muted" style="margin-bottom:14px;">Demo: geen echte Stripe-koppeling. Simuleer hieronder een geslaagde betaling.</p>
     <div class="flash flash-error" id="payError" hidden></div>
     <button id="payBtn" class="btn btn-orange">Betaling simuleren</button>
   </div>
@@ -49,7 +49,7 @@
   {% if is_admin and order.status == 'shipped' %}
   <div class="panel">
     <h2>Beheerdersactie</h2>
-    <p class="small-muted" style="margin-bottom:14px;">Staat in voor de vervoerder — bevestigt dat het pakket daadwerkelijk is bezorgd (nooit door koper of verkoper zelf te zetten).</p>
+    <p class="small-muted" style="margin-bottom:14px;">Staat in voor de vervoerder: bevestigt dat het pakket daadwerkelijk is bezorgd (nooit door koper of verkoper zelf te zetten).</p>
     <div class="flash flash-error" id="deliverError" hidden></div>
     <button id="markDeliveredBtn" class="btn btn-outline">Markeer als bezorgd</button>
   </div>
@@ -58,7 +58,7 @@
   {% if is_buyer and order.status == 'inspection_period' %}
   <div class="panel">
     <h2>Ontvangst bevestigen</h2>
-    <p class="small-muted" style="margin-bottom:14px;">Bevestig je ontvangst zodra je de fles hebt gecontroleerd — dit geeft de betaling vrij aan de verkoper.</p>
+    <p class="small-muted" style="margin-bottom:14px;">Bevestig je ontvangst zodra je de fles hebt gecontroleerd. Dit geeft de betaling vrij aan de verkoper.</p>
     <div class="flash flash-error" id="confirmError" hidden></div>
     <button id="confirmBtn" class="btn btn-orange">Ontvangst bevestigen</button>
   </div>

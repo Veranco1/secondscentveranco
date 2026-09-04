@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% import "macros.html" as m %}
-{% block title %}{{ listing.brand }} {{ listing.perfume_name }} — SecondScent{% endblock %}
+{% block title %}{{ listing.brand }} {{ listing.perfume_name }} · SecondScent{% endblock %}
 {% block content %}
 <div class="wrap">
   <div class="page-head">
@@ -43,7 +43,9 @@
 
         <dl class="kv-list" style="margin-top:20px;">
           <dt>Inhoud</dt><dd>{{ listing.size_ml }} ml (origineel {{ listing.original_size_ml }} ml)</dd>
-          <dt>Resterend</dt><dd>~{{ listing.estimated_remaining_percent }}%</dd>
+          <dt>Resterend</dt><dd>~{{ listing.estimated_remaining_percent }}%
+            <div class="fill-bar" style="margin-top:6px; margin-bottom:0;"><div class="fill-bar-fill" style="width:{{ listing.estimated_remaining_percent }}%;"></div></div>
+          </dd>
           <dt>Staat</dt><dd>{{ condition_labels.get(listing.condition, listing.condition) }}</dd>
           <dt>Doos</dt><dd>{{ 'Inclusief' if listing.box_included else 'Niet inbegrepen' }}</dd>
           {% if listing.tradeable %}<dt>Ruilen</dt><dd>Ook open voor ruil</dd>{% endif %}
