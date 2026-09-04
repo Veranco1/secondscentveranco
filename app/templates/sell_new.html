@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block title %}Verkopen — SecondScent{% endblock %}
+{% block content %}
+<div class="wrap-narrow">
+  <div class="page-head">
+    <h1>Plaats je fles</h1>
+    <p>Gratis adverteren. Elke advertentie doorloopt een echtheidscontrole voordat hij zichtbaar wordt voor kopers.</p>
+  </div>
+
+  {% if need_login %}
+  <div class="panel empty-state">
+    <h3>Log eerst in</h3>
+    <p>Je hebt een account nodig om te verkopen.</p>
+    <div class="form-actions" style="justify-content:center;">
+      <a href="{{ url_for('web.login', next=url_for('web.sell_new')) }}" class="btn btn-orange">Inloggen</a>
+      <a href="{{ url_for('web.register', next=url_for('web.sell_new')) }}" class="btn btn-outline">Account aanmaken</a>
+    </div>
+  </div>
+
+  {% elif need_seller %}
+  <div class="panel empty-state">
+    <h3>Word verkoper</h3>
+    <p>Je account is nog niet ingesteld als verkoper. Dat kost één klik — uitbetalingen vereisen daarna nog een (hier niet gesimuleerde) Stripe Connect-koppeling.</p>
+    <div class="form-actions" style="justify-content:center;">
+      <button id="becomeSellerBtn" class="btn btn-orange">Word verkoper</button>
+    </div>
+    <div class="flash flash-error" id="formError" hidden></div>
+  </div>
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  <script>
+    document.getElementById('becomeSellerBtn').addEventListener('click', async function () {
+      const { ok, data } = await SecondScent.ssJson('/auth/become-seller', { method: 'POST' });
+      if (!ok) { SecondScent.showFormError(document.getElementById('formError'), 'Er ging iets mis.'); return; }
+      window.location.reload();
+    });
+  </script>
+
+  {% else %}
+  <div class="panel">
+    <form id="listingForm">
+      <div class="field-row">
+        <div class="field">
+          <label for="brand">Merk</label>
+          <input type="text" id="brand" name="brand" required placeholder="Bijv. Dior">
+        </div>
+        <div class="field">
+          <label for="perfume_name">Naam</label>
+          <input type="text" id="perfume_name" name="perfume_name" required placeholder="Bijv. Sauvage">
+        </div>
+      </div>
+      <div class="field">
+        <label for="variant_concentration">Variant / concentratie (optioneel)</label>
+        <input type="text" id="variant_concentration" name="variant_concentration" placeholder="Bijv. Eau de Parfum">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="original_size_ml">Originele inhoud (ml)</label>
+          <input type="number" id="original_size_ml" name="original_size_ml" required min="1">
+        </div>
+        <div class="field">
+          <label for="size_ml">Huidige inhoud (ml)</label>
+          <input type="number" id="size_ml" name="size_ml" required min="1">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="estimated_remaining_percent">Geschat resterend (%)</label>
+          <input type="number" id="estimated_remaining_percent" name="estimated_remaining_percent" required min="0" max="100">
+        </div>
+        <div class="field">
+          <label for="condition">Staat</label>
+          <select id="condition" name="condition" required>
+            {% for key, label in condition_labels.items() %}
+              <option value="{{ key }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="asking_price_cents">Vraagprijs (€)</label>
+        <input type="number" id="asking_price_cents" name="asking_price_cents" required min="0.01" step="0.01">
+      </div>
+      <div class="field">
+        <label for="batch_code">Batchcode (zoals op de fles)</label>
+        <input type="text" id="batch_code" name="batch_code" placeholder="Optioneel, maar sterk aanbevolen">
+        <div class="hint">Een batchcode is geen bewijs van echtheid — het is één van meerdere signalen die worden meegewogen.</div>
+      </div>
+      <div class="field">
+        <label for="description">Omschrijving</label>
+        <textarea id="description" name="description" placeholder="Vertel iets over de fles, hoe lang je hem had, waarom je hem verkoopt…"></textarea>
+      </div>
+      <div class="checkbox-row" style="margin-bottom:12px;">
+        <input type="checkbox" id="box_included" name="box_included">
+        <label for="box_included" style="margin:0;">Doos is inbegrepen</label>
+      </div>
+      <div class="checkbox-row" style="margin-bottom:12px;">
+        <input type="checkbox" id="proof_of_purchase_available" name="proof_of_purchase_available">
+        <label for="proof_of_purchase_available" style="margin:0;">Ik heb een aankoopbewijs</label>
+      </div>
+      <div class="checkbox-row">
+        <input type="checkbox" id="tradeable" name="tradeable">
+        <label for="tradeable" style="margin:0;">Ook open voor ruil</label>
+      </div>
+      <div class="flash flash-error" id="formError" hidden style="margin-top:18px;"></div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-orange">Doorgaan naar foto's</button>
+      </div>
+    </form>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+{% block extra_scripts %}
+{% if not need_login and not need_seller %}
+<script>
+(function () {
+  const form = document.getElementById('listingForm');
+  const err = document.getElementById('formError');
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    SecondScent.hideFormError(err);
+    const payload = {
+      brand: form.brand.value.trim(),
+      perfume_name: form.perfume_name.value.trim(),
+      variant_concentration: form.variant_concentration.value.trim() || null,
+      original_size_ml: parseInt(form.original_size_ml.value, 10),
+      size_ml: parseInt(form.size_ml.value, 10),
+      estimated_remaining_percent: parseInt(form.estimated_remaining_percent.value, 10),
+      condition: form.condition.value,
+      asking_price_cents: Math.round(parseFloat(form.asking_price_cents.value) * 100),
+      batch_code: form.batch_code.value.trim() || null,
+      description: form.description.value.trim(),
+      box_included: form.box_included.checked,
+      proof_of_purchase_available: form.proof_of_purchase_available.checked,
+      tradeable: form.tradeable.checked,
+    };
+    const { ok, data } = await SecondScent.ssJson('/listings', { method: 'POST', json: payload });
+    if (!ok) {
+      SecondScent.showFormError(err, data.message || 'Controleer de ingevulde velden en probeer het opnieuw.');
+      return;
+    }
+    window.location.href = '/verkopen/' + data.listing.id;
+  });
+})();
+</script>
+{% endif %}
+{% endblock %}

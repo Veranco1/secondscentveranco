@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}{{ code }} — SecondScent{% endblock %}
+{% block content %}
+<div class="wrap-narrow">
+  <div class="empty-state">
+    <h3>{{ code }}</h3>
+    <p>{{ message }}</p>
+    <div class="form-actions" style="justify-content:center; margin-top:20px;">
+      <a href="{{ url_for('web.index') }}" class="btn btn-orange">Naar de homepage</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

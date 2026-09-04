@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% import "macros.html" as m %}
+{% block content %}
+<section class="hero">
+  <div class="wrap hero-inner">
+    <div>
+      <div class="eyebrow">Tweedehands parfum, gecontroleerd</div>
+      <h1>Andermans lege flacon is jouw volgende signatuurgeur</h1>
+      <p>Koop en verkoop gecontroleerde parfum, decants en verouderde flessen — van mensen die ze echt droegen, niet uit een magazijn.</p>
+      <div class="hero-ctas">
+        <a href="#shop" class="btn btn-orange">Nu kopen</a>
+        <a href="{{ url_for('web.sell_new') }}" class="btn btn-outline">Verkoop een fles</a>
+      </div>
+      <div class="hero-trust">
+        <div><strong>12.400+</strong>flessen doorgegeven</div>
+        <div><strong>100%</strong>echtheidscontrole</div>
+        <div><strong>9.200</strong>actieve handelaren</div>
+      </div>
+    </div>
+    <div class="hero-art">
+      <div class="art-card">
+        <div class="art-inner">
+          <img src="{{ url_for('static', filename='img/hero.jpg') }}" alt="" class="art-photo">
+          <div class="art-scrim"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="how">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Van andermans kaptafel tot jouw deur</h2>
+      <p>Geen magazijnen, geen mysterieuze voorraad — elke fles komt uit een echte collectie en doorloopt een echtheidscontrole voordat hij verzonden wordt.</p>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <h3>Plaats wat je niet meer gebruikt</h3>
+        <p>Fotografeer de fles volgens de 12 vaste hoeken, geef het vulniveau op en bepaal je prijs.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <h3>Wij controleren de echtheid</h3>
+        <p>Batchcodes, verpakking en foto's worden automatisch en waar nodig handmatig beoordeeld voordat een advertentie live gaat.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <h3>Veilig kopen en verkopen</h3>
+        <p>Kopers betalen veilig via kopersbescherming, verkopers verzenden binnen de afgesproken termijn, en de betaling wordt pas vrijgegeven na bevestiging.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="shop" style="padding-top:0;">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Recent geplaatst</h2>
+      <p>Flessen geplaatst door mensen zelf, geprijsd en gefotografeerd door de verkoper — geen magazijn.</p>
+    </div>
+
+    <form method="get" action="{{ url_for('web.index') }}#shop" class="filter-bar" style="border-radius:16px; margin-bottom:24px;">
+      <div class="filter-bar-inner">
+        <div class="filter-search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" name="q" value="{{ q }}" placeholder="Zoek merk of geur…">
+        </div>
+        <select name="condition" class="filter-select">
+          <option value="">Alle staten</option>
+          {% for key, label in condition_labels.items() %}
+            <option value="{{ key }}" {% if condition == key %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-orange filter-btn">Zoeken</button>
+      </div>
+    </form>
+
+    {% if listings %}
+    <div class="listing-grid">
+      {% for l in listings %}
+      <a href="{{ url_for('web.listing_detail', listing_id=l.id) }}" class="card">
+        <div class="card-image">
+          {% if l.cover_photo_id %}
+            <img src="{{ url_for('listings.get_photo_file', listing_id=l.id, photo_id=l.cover_photo_id) }}" alt="{{ l.brand }} {{ l.perfume_name }}">
+          {% else %}
+            <div class="placeholder">{{ l.brand }}<br>{{ l.perfume_name }}</div>
+          {% endif %}
+        </div>
+        <div class="card-body">
+          <div class="card-house">{{ l.brand }}</div>
+          <div class="card-name">{{ l.perfume_name }}</div>
+          <div class="card-foot">
+            <span class="card-price">{{ m.money(l.asking_price_cents) }}</span>
+            <span class="card-condition">{{ condition_labels.get(l.condition, l.condition) }}</span>
+          </div>
+          <div class="card-meta">
+            <span>{{ l.size_ml }} ml · {{ l.estimated_remaining_percent }}% vol</span>
+          </div>
+          {{ m.verification_badge(l.verification_status) }}
+          <span class="card-view-btn" style="margin-top:12px;">Bekijk advertentie</span>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <h3>Nog geen advertenties gevonden</h3>
+      <p>Pas je zoekopdracht aan, of <a href="{{ url_for('web.sell_new') }}" style="color:var(--orange); font-weight:600;">plaats de eerste advertentie</a>.</p>
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+<section class="section" style="padding-top:0;">
+  <div class="wrap">
+    <div class="cta-banner">
+      <div>
+        <div class="cta-banner-eyebrow">Zonde om te laten staan</div>
+        <h2>Jouw plank is iemands verlanglijst</h2>
+        <p>Verkoop je parfum of sta open voor een ruil. Adverteren is altijd gratis.</p>
+      </div>
+      <a href="{{ url_for('web.sell_new') }}" class="btn">Geef je fles door</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

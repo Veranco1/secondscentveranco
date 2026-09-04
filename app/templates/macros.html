@@ -1,0 +1,54 @@
+{% macro badge(label, tone='neutral') -%}
+<span class="badge badge-{{ tone }}"><span class="badge-dot"></span>{{ label }}</span>
+{%- endmacro %}
+
+{% macro verification_badge(status) -%}
+  {% set map = {
+    'unverified': ('Nog niet gecontroleerd', 'neutral'),
+    'automated_checks_completed': ('Automatische controles afgerond', 'info'),
+    'additional_verification_required': ('Aanvullend bewijs nodig', 'warn'),
+    'manual_review': ('In beoordeling bij SecondScent', 'warn'),
+    'secondscent_verified': ('SecondScent Verified', 'verified'),
+    'rejected': ('Afgekeurd', 'danger'),
+  } %}
+  {% set label, tone = map.get(status, (status, 'neutral')) %}
+  {{ badge(label, tone) }}
+{%- endmacro %}
+
+{% macro order_badge(status) -%}
+  {% set map = {
+    'payment_pending': ('Wacht op betaling', 'warn'),
+    'paid': ('Betaald', 'info'),
+    'awaiting_shipment': ('Wacht op verzending', 'info'),
+    'shipped': ('Verzonden', 'info'),
+    'delivered': ('Bezorgd', 'info'),
+    'inspection_period': ('Inspectieperiode', 'info'),
+    'completed': ('Afgerond', 'ok'),
+    'issue_reported': ('Probleem gemeld', 'warn'),
+    'under_review': ('In behandeling', 'warn'),
+    'return_required': ('Retour vereist', 'warn'),
+    'return_shipped': ('Retour verzonden', 'warn'),
+    'cancelled': ('Geannuleerd', 'danger'),
+    'refunded': ('Terugbetaald', 'danger'),
+  } %}
+  {% set label, tone = map.get(status, (status, 'neutral')) %}
+  {{ badge(label, tone) }}
+{%- endmacro %}
+
+{% macro dispute_badge(status) -%}
+  {% set map = {'open': ('Open', 'warn'), 'resolved': ('Afgehandeld', 'ok')} %}
+  {% set label, tone = map.get(status, (status, 'neutral')) %}
+  {{ badge(label, tone) }}
+{%- endmacro %}
+
+{% macro risk_pill(band) -%}
+  {% if band %}
+  <span class="risk-pill risk-{{ band }}">{{ {'low': 'laag risico', 'medium': 'gemiddeld risico', 'high': 'hoog risico'}.get(band, band) }}</span>
+  {% endif %}
+{%- endmacro %}
+
+{% macro money(cents, currency='EUR') -%}
+  {%- if cents is none -%}—{%- else -%}
+    {{ '€ %.2f' | format(cents / 100) }}
+  {%- endif -%}
+{%- endmacro %}

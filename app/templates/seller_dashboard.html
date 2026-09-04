@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% import "macros.html" as m %}
+{% block title %}Mijn advertenties — SecondScent{% endblock %}
+{% block content %}
+<div class="wrap">
+  <div class="page-head">
+    <h1>Mijn advertenties</h1>
+    <a href="{{ url_for('web.sell_new') }}" class="btn btn-orange btn-sm">Nieuwe advertentie</a>
+  </div>
+
+  {% if is_seller and not payouts_enabled %}
+  <div class="panel">
+    <h2>Uitbetalingen</h2>
+    {% if payments_are_fake %}
+    <p class="small-muted" style="margin-bottom:12px;">Er is nog geen Stripe Connect-koppeling. Een koper kan pas betaling vrijgeven zodra dat geregeld is. Er is geen echte Stripe-koppeling in deze omgeving — onderstaande knop simuleert een afgeronde koppeling.</p>
+    <div class="flash flash-error" id="payoutError" hidden></div>
+    <button id="enablePayoutsBtn" class="btn btn-outline">Stripe Connect-koppeling simuleren</button>
+    {% else %}
+    <p class="small-muted">Rond Stripe Connect-onboarding af om betalingen te kunnen ontvangen.</p>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% if listings %}
+  <div class="table-wrap" style="margin-bottom:32px;">
+    <table class="data">
+      <thead><tr><th>Parfum</th><th>Prijs</th><th>Status</th><th>Verificatie</th><th></th></tr></thead>
+      <tbody>
+        {% for l in listings %}
+        <tr>
+          <td>{{ l.brand }} {{ l.perfume_name }}</td>
+          <td>{{ m.money(l.asking_price_cents) }}</td>
+          <td>{{ l.status }}</td>
+          <td>{{ m.verification_badge(l.verification_status) }}</td>
+          <td><a href="{{ url_for('web.sell_manage', listing_id=l.id) }}" class="btn btn-outline btn-sm">Beheren</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state" style="margin-bottom:32px;">
+    <h3>Nog geen advertenties</h3>
+  </div>
+  {% endif %}
+
+  <div class="page-head" style="padding-top:0;"><h1 style="font-size:22px;">Bestellingen om te verzenden</h1></div>
+  {% if orders %}
+  <div class="table-wrap">
+    <table class="data">
+      <thead><tr><th>Parfum</th><th>Koper</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        {% for o in orders %}
+        <tr>
+          <td>{{ o.brand }} {{ o.perfume_name }}</td>
+          <td>{{ m.money(o.total_price_cents) }}</td>
+          <td>{{ m.order_badge(o.status) }}</td>
+          <td><a href="{{ url_for('web.account_order_detail', order_id=o.id) }}" class="btn btn-outline btn-sm">Bekijken</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state"><h3>Nog geen bestellingen</h3></div>
+  {% endif %}
+</div>
+{% endblock %}
+{% block extra_scripts %}
+<script>
+(function () {
+  const btn = document.getElementById('enablePayoutsBtn');
+  if (btn) btn.addEventListener('click', async function () {
+    const err = document.getElementById('payoutError');
+    SecondScent.hideFormError(err);
+    const { ok, data } = await SecondScent.ssJson('/auth/dev-enable-payouts', { method: 'POST' });
+    if (!ok) { SecondScent.showFormError(err, data.message || 'Mislukt.'); return; }
+    window.location.reload();
+  });
+})();
+</script>
+{% endblock %}

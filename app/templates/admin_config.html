@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% import "macros.html" as m %}
+{% block title %}Instellingen — SecondScent Beheer{% endblock %}
+{% block content %}
+<div class="wrap">
+  <div class="page-head"><h1>Beheer</h1></div>
+  <div class="dash-layout">
+    <nav class="dash-nav">
+      <a href="{{ url_for('web.admin_queue') }}">Reviewwachtrij</a>
+      <a href="{{ url_for('web.admin_disputes') }}">Geschillen</a>
+      <a href="{{ url_for('web.admin_intelligence') }}">Intelligence</a>
+      <a href="{{ url_for('web.admin_config') }}" class="is-active">Instellingen</a>
+    </nav>
+    <div>
+      <div class="panel">
+        <h2>Fee rules</h2>
+        {% for fr in fee_rules %}
+        <form class="feeForm" data-fee-key="{{ fr.fee_key }}" style="margin-bottom:16px;">
+          <div class="field-row">
+            <div class="field"><label>{{ fr.fee_key }} — percentage (bps)</label><input type="number" name="percentage_bps" value="{{ fr.percentage_bps }}"></div>
+            <div class="field"><label>Vast bedrag (cent)</label><input type="number" name="fixed_cents" value="{{ fr.fixed_cents }}"></div>
+          </div>
+          <button type="submit" class="btn btn-outline btn-sm">Opslaan</button>
+        </form>
+        {% endfor %}
+        <div class="flash flash-error" id="feeError" hidden></div>
+      </div>
+
+      <div class="panel">
+        <h2>Platformconfiguratie</h2>
+        {% for key, value in config.items() %}
+        <form class="configForm" data-key="{{ key }}" style="margin-bottom:12px; display:flex; gap:10px; align-items:end;">
+          <div class="field" style="flex:1; margin-bottom:0;"><label>{{ key }}</label><input type="text" name="value" value="{{ value }}"></div>
+          <button type="submit" class="btn btn-outline btn-sm">Opslaan</button>
+        </form>
+        {% endfor %}
+        <div class="flash flash-error" id="configError" hidden></div>
+      </div>
+
+      <div class="panel">
+        <h2>Handmatige sweep</h2>
+        <p class="small-muted" style="margin-bottom:14px;">Vervangt in deze demo een geplande achtergrondtaak (vervallen inspectieperiodes, verzendtermijnen, etc.).</p>
+        <div class="flash flash-success" id="sweepResult" hidden></div>
+        <button id="sweepBtn" class="btn btn-outline">Sweep nu uitvoeren</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_scripts %}
+<script>
+(function () {
+  document.querySelectorAll('.feeForm').forEach(function (form) {
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const err = document.getElementById('feeError');
+      SecondScent.hideFormError(err);
+      const { ok, data } = await SecondScent.ssJson('/admin/fee-rules/' + form.dataset.feeKey, {
+        method: 'PUT', json: { percentage_bps: parseInt(form.percentage_bps.value, 10), fixed_cents: parseInt(form.fixed_cents.value, 10) },
+      });
+      if (!ok) { SecondScent.showFormError(err, data.message || 'Mislukt.'); return; }
+    });
+  });
+  document.querySelectorAll('.configForm').forEach(function (form) {
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const err = document.getElementById('configError');
+      SecondScent.hideFormError(err);
+      const { ok, data } = await SecondScent.ssJson('/admin/config/' + form.dataset.key, {
+        method: 'PUT', json: { value: form.value.value },
+      });
+      if (!ok) { SecondScent.showFormError(err, data.message || 'Mislukt.'); return; }
+    });
+  });
+  document.getElementById('sweepBtn').addEventListener('click', async function () {
+    const res = document.getElementById('sweepResult');
+    const { ok, data } = await SecondScent.ssJson('/admin/sweep', { method: 'POST' });
+    res.hidden = false;
+    res.textContent = ok ? ('Sweep uitgevoerd: ' + JSON.stringify(data)) : 'Sweep mislukt.';
+  });
+})();
+</script>
+{% endblock %}

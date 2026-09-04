@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% import "macros.html" as m %}
+{% block title %}Authenticiteitsmelding — SecondScent Beheer{% endblock %}
+{% block content %}
+<div class="wrap">
+  <div class="page-head">
+    <div class="crumb"><a href="{{ url_for('web.dispute_detail', dispute_id=dispute.id) }}">Geschil</a> / Authenticiteitsmelding</div>
+    <h1>{{ listing.brand }} {{ listing.perfume_name }}</h1>
+    <p class="small-muted">Status: {{ report.status }}</p>
+  </div>
+
+  <div class="panel">
+    <p class="small-muted">Dit is een gestructureerde naast-elkaar-weergave — geen automatisch match/geen-match-oordeel. De beoordelaar bepaalt de uitkomst.</p>
+  </div>
+
+  {% for pair in comparison %}
+  <div class="panel">
+    <h3>{{ pair.buyer_evidence.evidence_type }}</h3>
+    <div class="grid-2">
+      <div>
+        <p class="small-muted" style="margin-bottom:8px;">Door koper aangeleverd</p>
+        {% if pair.buyer_evidence.text_value %}<p>{{ pair.buyer_evidence.text_value }}</p>{% endif %}
+        {% if not pair.buyer_evidence.text_value and not pair.buyer_evidence.file_ref %}<p class="small-muted">Geen inhoud.</p>{% endif %}
+      </div>
+      <div>
+        <p class="small-muted" style="margin-bottom:8px;">Origineel uit de advertentie</p>
+        {% if pair.original_listing_photos %}
+        <div class="photo-grid" style="grid-template-columns:repeat(auto-fill,minmax(90px,1fr));">
+          {% for p in pair.original_listing_photos %}
+          <div class="card-image" style="border-radius:8px; border:1px solid var(--line); aspect-ratio:1;">
+            <img src="{{ url_for('listings.get_photo_file', listing_id=listing.id, photo_id=p.id) }}" alt="{{ p.category }}">
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="small-muted">Geen bijpassende originele foto's.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+
+  <div class="panel">
+    <h2>Beoordeling vastleggen</h2>
+    <form id="reportForm">
+      <div class="field">
+        <label for="report_status">Uitkomst</label>
+        <select id="report_status" name="status">
+          <option value="reviewed">Beoordeeld (nog geen conclusie)</option>
+          <option value="confirmed_counterfeit">Bevestigd: namaak</option>
+          <option value="not_counterfeit">Niet namaak</option>
+        </select>
+      </div>
+      <div class="field"><label for="report_notes">Toelichting</label><textarea id="report_notes"></textarea></div>
+      <div class="flash flash-error" id="reportError" hidden></div>
+      <button type="submit" class="btn btn-orange">Opslaan</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
+{% block extra_scripts %}
+<script>
+(function () {
+  const reportId = {{ report.id | tojson }};
+  document.getElementById('reportForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const err = document.getElementById('reportError');
+    SecondScent.hideFormError(err);
+    const { ok, data } = await SecondScent.ssJson('/admin/authenticity-reports/' + reportId, {
+      method: 'PATCH', json: { status: document.getElementById('report_status').value, notes: document.getElementById('report_notes').value.trim() },
+    });
+    if (!ok) { SecondScent.showFormError(err, data.message || 'Mislukt.'); return; }
+    window.location.reload();
+  });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% import "macros.html" as m %}
+{% block title %}{{ listing.brand }} {{ listing.perfume_name }} — Beheer{% endblock %}
+{% block content %}
+<div class="wrap">
+  <div class="page-head">
+    <div class="crumb"><a href="{{ url_for('web.admin_queue') }}">Reviewwachtrij</a> / {{ listing.brand }} {{ listing.perfume_name }}</div>
+    <h1>{{ listing.brand }} {{ listing.perfume_name }}</h1>
+    <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
+      {{ m.verification_badge(listing.verification_status) }}
+      {{ m.risk_pill(listing.risk_band) }}
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <div class="panel">
+        <h2>Bewijsfoto's</h2>
+        <div class="photo-grid" style="grid-template-columns:repeat(auto-fill,minmax(120px,1fr));">
+          {% for p in photos %}
+          <div class="photo-slot has-photo">
+            <div class="cat-label">{{ category_meta.get(p.category, [p.category])[0] }}</div>
+            <div class="preview"><img src="{{ url_for('listings.get_photo_file', listing_id=listing.id, photo_id=p.id) }}" alt="{{ p.category }}"></div>
+            {% if p.seller_entered_code %}<div class="small-muted">Code: {{ p.seller_entered_code }}</div>{% endif %}
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Risicobeoordeling</h2>
+        {% if risk_assessment %}
+        <p class="small-muted">Score {{ risk_assessment.score }} · {{ m.risk_pill(risk_assessment.band) }} · engine v{{ risk_assessment.engine_version }}</p>
+        <p style="margin-top:10px;">{{ risk_summary }}</p>
+        {% else %}
+        <p class="small-muted">Nog geen beoordeling uitgevoerd.</p>
+        {% endif %}
+      </div>
+
+      <div class="panel">
+        <h2>Voldoet aan SecondScent Verified-standaard?</h2>
+        <p><strong>{{ 'Ja' if meets_verified_standard.meets_hard_requirements else 'Nee' }}</strong></p>
+        {% if meets_verified_standard.reasons %}
+        <ul style="margin:10px 0 0 18px; font-size:13.5px; color:var(--green-soft);">
+          {% for r in meets_verified_standard.reasons %}<li>{{ r }}</li>{% endfor %}
+        </ul>
+        {% endif %}
+        {% if meets_verified_standard.high_weight_signals_needing_explanation %}
+        <p class="small-muted" style="margin-top:10px;">Onopgeloste zware signalen — goedkeuren vereist een toelichting: {{ meets_verified_standard.high_weight_signals_needing_explanation | join(', ') }}</p>
+        {% endif %}
+      </div>
+
+      {% if has_open_review %}
+      <div class="panel">
+        <h2>Beslissing</h2>
+        <form id="reviewForm">
+          <div class="field">
+            <label for="review_notes">Toelichting (verplicht behalve bij goedkeuren zonder open signalen)</label>
+            <textarea id="review_notes"></textarea>
+          </div>
+          <div class="flash flash-error" id="reviewError" hidden></div>
+          <div class="action-buttons">
+            <button type="button" class="btn btn-orange" data-action="approve">Goedkeuren</button>
+            <button type="button" class="btn btn-outline" data-action="request_more_evidence">Meer bewijs vragen</button>
+            <button type="button" class="btn btn-danger" data-action="reject">Afwijzen</button>
+            <button type="button" class="btn btn-outline" data-action="escalate">Escaleren</button>
+          </div>
+        </form>
+      </div>
+      {% endif %}
+    </div>
+
+    <div>
+      <div class="panel">
+        <h3>Verkoper</h3>
+        <p>{{ seller.display_name if seller else '—' }} ({{ seller.email if seller else '' }})</p>
+        <dl class="kv-list" style="margin-top:12px;">
+          <dt>Account sinds</dt><dd>{{ seller_history.account_created_at | datetimeformat }}</dd>
+          {% for status, c in seller_history.listing_counts_by_status.items() %}
+          <dt>Listings ({{ status }})</dt><dd>{{ c }}</dd>
+          {% endfor %}
+          {% for status, c in seller_history.prior_authenticity_reports_by_status.items() %}
+          <dt>Eerdere meldingen ({{ status }})</dt><dd>{{ c }}</dd>
+          {% endfor %}
+        </dl>
+      </div>
+
+      {% if similar_listings %}
+      <div class="panel">
+        <h3>Vergelijkbare advertenties</h3>
+        {% for s in similar_listings %}
+        <div class="small-muted" style="padding:6px 0; border-bottom:1px solid var(--line);">
+          {{ m.money(s.asking_price_cents) }} · {{ s.status }} · {{ s.verification_status }}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <div class="panel">
+        <h3>Verificatiegeschiedenis</h3>
+        <ul class="timeline">
+          {% for h in verification_history %}
+          <li>
+            <div class="t-title">{{ h.status }}</div>
+            <div class="t-meta">{{ h.method }} · {{ h.created_at | datetimeformat }}{% if h.notes %} · {{ h.notes }}{% endif %}</div>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_scripts %}
+<script>
+(function () {
+  const listingId = {{ listing.id | tojson }};
+  document.querySelectorAll('[data-action]').forEach(function (btn) {
+    btn.addEventListener('click', async function () {
+      const err = document.getElementById('reviewError');
+      SecondScent.hideFormError(err);
+      const { ok, data } = await SecondScent.ssJson('/admin/listings/' + listingId + '/review', {
+        method: 'POST', json: { action: btn.dataset.action, notes: document.getElementById('review_notes').value.trim() || null },
+      });
+      if (!ok) { SecondScent.showFormError(err, data.message || 'Actie mislukt.'); return; }
+      window.location.reload();
+    });
+  });
+})();
+</script>
+{% endblock %}

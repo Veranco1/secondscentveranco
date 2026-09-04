@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% import "macros.html" as m %}
+{% block title %}Geschillen — SecondScent Beheer{% endblock %}
+{% block content %}
+<div class="wrap">
+  <div class="page-head"><h1>Beheer</h1></div>
+  <div class="dash-layout">
+    <nav class="dash-nav">
+      <a href="{{ url_for('web.admin_queue') }}">Reviewwachtrij</a>
+      <a href="{{ url_for('web.admin_disputes') }}" class="is-active">Geschillen</a>
+      <a href="{{ url_for('web.admin_intelligence') }}">Intelligence</a>
+      <a href="{{ url_for('web.admin_config') }}">Instellingen</a>
+    </nav>
+    <div>
+      <div class="chip-row">
+        <a href="{{ url_for('web.admin_disputes', status='open') }}" class="chip {{ 'chip-active' if status == 'open' }}">Open</a>
+        <a href="{{ url_for('web.admin_disputes', status='resolved') }}" class="chip {{ 'chip-active' if status == 'resolved' }}">Afgehandeld</a>
+      </div>
+      {% if disputes %}
+      <div class="table-wrap">
+        <table class="data">
+          <thead><tr><th>Reden</th><th>Bedrag</th><th>Status</th><th>Geopend</th><th></th></tr></thead>
+          <tbody>
+            {% for d in disputes %}
+            <tr>
+              <td>{{ d.reason }}</td>
+              <td>{{ m.money(d.total_price_cents) }}</td>
+              <td>{{ m.dispute_badge(d.status) }}</td>
+              <td>{{ d.created_at | datetimeformat }}</td>
+              <td><a href="{{ url_for('web.dispute_detail', dispute_id=d.id) }}" class="btn btn-outline btn-sm">Bekijken</a></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state"><h3>Geen geschillen in deze status</h3></div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

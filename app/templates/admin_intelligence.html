@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% import "macros.html" as m %}
+{% block title %}Intelligence — SecondScent Beheer{% endblock %}
+{% block content %}
+<div class="wrap">
+  <div class="page-head"><h1>Beheer</h1></div>
+  <div class="dash-layout">
+    <nav class="dash-nav">
+      <a href="{{ url_for('web.admin_queue') }}">Reviewwachtrij</a>
+      <a href="{{ url_for('web.admin_disputes') }}">Geschillen</a>
+      <a href="{{ url_for('web.admin_intelligence') }}" class="is-active">Intelligence</a>
+      <a href="{{ url_for('web.admin_config') }}">Instellingen</a>
+    </nav>
+    <div>
+      <div class="panel">
+        <h2>Signalen (laatste 30 dagen)</h2>
+        {% if signals %}
+        <div class="table-wrap">
+          <table class="data">
+            <thead><tr><th>Signaal</th><th>Aantal</th><th>Totaal gewicht</th></tr></thead>
+            <tbody>
+              {% for s in signals %}
+              <tr><td>{{ s.signal_type }}</td><td>{{ s.c }}</td><td>{{ s.total_weight }}</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}<p class="small-muted">Geen signalen in deze periode.</p>{% endif %}
+      </div>
+
+      <div class="panel">
+        <h2>Verkopers met signalen</h2>
+        <p class="small-muted" style="margin-bottom:12px;">Alleen id + e-mail — geen overige persoonsgegevens.</p>
+        {% if sellers %}
+        <div class="table-wrap">
+          <table class="data">
+            <thead><tr><th>E-mail</th><th>Totaal gewicht</th><th>Aantal advertenties</th></tr></thead>
+            <tbody>
+              {% for s in sellers %}
+              <tr><td>{{ s.email }}</td><td>{{ s.total_weight }}</td><td>{{ s.listing_count }}</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}<p class="small-muted">Geen bevindingen.</p>{% endif %}
+      </div>
+
+      <div class="panel">
+        <h2>Fotohergebruik tussen accounts</h2>
+        {% if clusters %}
+        <div class="table-wrap">
+          <table class="data">
+            <thead><tr><th>Hash</th><th>Aantal verkopers</th><th>Aantal advertenties</th><th>E-mails</th></tr></thead>
+            <tbody>
+              {% for c in clusters %}
+              <tr><td style="font-family:monospace; font-size:11px;">{{ c.sha256_hash[:16] }}…</td><td>{{ c.distinct_sellers }}</td><td>{{ c.distinct_listings }}</td><td>{{ c.seller_emails | join(', ') }}</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}<p class="small-muted">Geen clusters gevonden.</p>{% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

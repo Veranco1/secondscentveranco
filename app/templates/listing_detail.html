@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% import "macros.html" as m %}
+{% block title %}{{ listing.brand }} {{ listing.perfume_name }} — SecondScent{% endblock %}
+{% block content %}
+<div class="wrap">
+  <div class="page-head">
+    <div class="crumb"><a href="{{ url_for('web.index') }}">Ontdekken</a> / {{ listing.brand }}</div>
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <div class="panel panel-tight">
+        {% set main_photo = photos_by_cat.get('bottle_front') %}
+        <div class="card-image" style="border-radius:14px; border:1px solid var(--line); margin-bottom:14px;">
+          {% if main_photo %}
+            <img src="{{ url_for('listings.get_photo_file', listing_id=listing.id, photo_id=main_photo.id) }}" alt="{{ listing.brand }} {{ listing.perfume_name }}">
+          {% else %}
+            <div class="placeholder">{{ listing.brand }}<br>{{ listing.perfume_name }}</div>
+          {% endif %}
+        </div>
+        <div class="photo-grid" style="grid-template-columns:repeat(auto-fill,minmax(90px,1fr)); gap:8px;">
+          {% for cat, meta in category_meta.items() %}
+            {% if cat != 'proof_of_purchase' and cat != 'bottle_front' and photos_by_cat.get(cat) %}
+            <div class="card-image" style="border-radius:10px; border:1px solid var(--line); aspect-ratio:1;">
+              <img src="{{ url_for('listings.get_photo_file', listing_id=listing.id, photo_id=photos_by_cat[cat].id) }}" alt="{{ meta[0] }}" title="{{ meta[0] }}">
+            </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel">
+        <div class="card-house">{{ listing.brand }}</div>
+        <h1 style="font-size:26px; margin-bottom:10px;">{{ listing.perfume_name }}{% if listing.variant_concentration %} <span style="font-size:16px; color:var(--green-soft); font-weight:400;">({{ listing.variant_concentration }})</span>{% endif %}</h1>
+        <div style="margin-bottom:14px;">{{ m.verification_badge(listing.verification_status) }}</div>
+        <p class="status-explain">{{ listing.verification_explanation }}</p>
+
+        <div class="price-lines">
+          <div class="price-line total"><span>Vraagprijs</span><span>{{ m.money(listing.asking_price_cents) }}</span></div>
+        </div>
+
+        <dl class="kv-list" style="margin-top:20px;">
+          <dt>Inhoud</dt><dd>{{ listing.size_ml }} ml (origineel {{ listing.original_size_ml }} ml)</dd>
+          <dt>Resterend</dt><dd>~{{ listing.estimated_remaining_percent }}%</dd>
+          <dt>Staat</dt><dd>{{ condition_labels.get(listing.condition, listing.condition) }}</dd>
+          <dt>Doos</dt><dd>{{ 'Inclusief' if listing.box_included else 'Niet inbegrepen' }}</dd>
+          {% if listing.tradeable %}<dt>Ruilen</dt><dd>Ook open voor ruil</dd>{% endif %}
+        </dl>
+
+        {% if listing.description %}
+        <hr class="divider">
+        <p style="font-size:14px; color:var(--green-soft); white-space:pre-line;">{{ listing.description }}</p>
+        {% endif %}
+
+        <hr class="divider">
+        <div class="card-seller" style="border:none; padding:0; margin:0;">
+          <div class="seller-avatar">{{ seller.display_name[:1] if seller else '?' }}</div>
+          <span class="seller-name">Verkocht door {{ seller.display_name if seller else 'onbekend' }}</span>
+        </div>
+
+        <div class="form-actions">
+          {% if is_owner %}
+            <a href="{{ url_for('web.sell_manage', listing_id=listing.id) }}" class="btn btn-outline btn-block">Advertentie beheren</a>
+          {% elif can_buy %}
+            <a href="{{ url_for('web.checkout', listing_id=listing.id) }}" class="btn btn-orange btn-block">Nu kopen</a>
+          {% elif not current_user %}
+            <a href="{{ url_for('web.login', next=url_for('web.listing_detail', listing_id=listing.id)) }}" class="btn btn-orange btn-block">Log in om te kopen</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

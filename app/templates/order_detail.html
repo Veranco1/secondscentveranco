@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+{% import "macros.html" as m %}
+{% block title %}Bestelling — SecondScent{% endblock %}
+{% block content %}
+<div class="wrap-narrow">
+  <div class="page-head">
+    <div class="crumb">
+      <a href="{{ is_buyer and url_for('web.account_orders') or url_for('web.seller_dashboard') }}">
+        {{ 'Mijn aankopen' if is_buyer else 'Mijn advertenties' }}
+      </a> / Bestelling
+    </div>
+    <h1>{{ listing.brand }} {{ listing.perfume_name }}</h1>
+    <div style="margin-top:8px;">{{ m.order_badge(order.status) }}</div>
+  </div>
+
+  <div class="panel">
+    <dl class="kv-list">
+      <dt>{{ 'Verkoper' if is_buyer else 'Koper' }}</dt><dd>{{ other_party.display_name if other_party else '—' }}</dd>
+      <dt>Totaal</dt><dd>{{ m.money(order.total_price_cents) }}</dd>
+      <dt>Besteld op</dt><dd>{{ order.created_at | datetimeformat }}</dd>
+      {% if order.shipping_deadline_at %}<dt>Verzenddeadline</dt><dd>{{ order.shipping_deadline_at | datetimeformat }}</dd>{% endif %}
+      {% if order.inspection_deadline_at %}<dt>Inspectie tot</dt><dd>{{ order.inspection_deadline_at | datetimeformat }}</dd>{% endif %}
+    </dl>
+  </div>
+
+  {% if is_buyer and order.status == 'payment_pending' and payments_are_fake %}
+  <div class="panel">
+    <h2>Betaling</h2>
+    <p class="small-muted" style="margin-bottom:14px;">Demo: geen echte Stripe-koppeling — simuleer hieronder een geslaagde betaling.</p>
+    <div class="flash flash-error" id="payError" hidden></div>
+    <button id="payBtn" class="btn btn-orange">Betaling simuleren</button>
+  </div>
+  {% endif %}
+
+  {% if is_seller and order.status == 'awaiting_shipment' %}
+  <div class="panel">
+    <h2>Verzenden</h2>
+    <form id="shipForm">
+      <div class="field-row">
+        <div class="field"><label for="carrier">Vervoerder</label><input type="text" id="carrier" name="carrier" required placeholder="Bijv. PostNL"></div>
+        <div class="field"><label for="tracking_number">Trackingnummer</label><input type="text" id="tracking_number" name="tracking_number" required></div>
+      </div>
+      <div class="flash flash-error" id="shipError" hidden></div>
+      <button type="submit" class="btn btn-orange">Markeer als verzonden</button>
+    </form>
+  </div>
+  {% endif %}
+
+  {% if is_admin and order.status == 'shipped' %}
+  <div class="panel">
+    <h2>Beheerdersactie</h2>
+    <p class="small-muted" style="margin-bottom:14px;">Staat in voor de vervoerder — bevestigt dat het pakket daadwerkelijk is bezorgd (nooit door koper of verkoper zelf te zetten).</p>
+    <div class="flash flash-error" id="deliverError" hidden></div>
+    <button id="markDeliveredBtn" class="btn btn-outline">Markeer als bezorgd</button>
+  </div>
+  {% endif %}
+
+  {% if is_buyer and order.status == 'inspection_period' %}
+  <div class="panel">
+    <h2>Ontvangst bevestigen</h2>
+    <p class="small-muted" style="margin-bottom:14px;">Bevestig je ontvangst zodra je de fles hebt gecontroleerd — dit geeft de betaling vrij aan de verkoper.</p>
+    <div class="flash flash-error" id="confirmError" hidden></div>
+    <button id="confirmBtn" class="btn btn-orange">Ontvangst bevestigen</button>
+  </div>
+  {% endif %}
+
+  {% if is_buyer and order.status in ('shipped', 'inspection_period') %}
+  <div class="panel">
+    <h2>Een probleem melden</h2>
+    <div class="grid-2">
+      <div>
+        <h3>Algemeen probleem</h3>
+        <form id="issueForm">
+          <div class="field">
+            <label for="issue_reason">Reden</label>
+            <select id="issue_reason" name="reason" required>
+              <option value="not_received">Niet ontvangen</option>
+              <option value="damaged">Beschadigd</option>
+              <option value="wrong_item">Verkeerd artikel</option>
+              <option value="significantly_not_as_described">Wijkt sterk af van omschrijving</option>
+              <option value="missing_parts_or_packaging">Ontbrekende onderdelen/verpakking</option>
+            </select>
+          </div>
+          <div class="field"><label for="issue_description">Omschrijving</label><textarea id="issue_description" name="description" required></textarea></div>
+          <div class="flash flash-error" id="issueError" hidden></div>
+          <button type="submit" class="btn btn-outline">Probleem melden</button>
+        </form>
+      </div>
+      <div>
+        <h3>Vermoedelijk niet authentiek</h3>
+        <form id="counterfeitForm">
+          <div class="field">
+            <label for="counterfeit_description">Wat wijkt er af?</label>
+            <textarea id="counterfeit_description" name="description" required placeholder="Beschrijf specifiek wat er niet klopt."></textarea>
+          </div>
+          <div class="flash flash-error" id="counterfeitError" hidden></div>
+          <button type="submit" class="btn btn-danger">Meld vermoedelijke namaak</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if dispute %}
+  <div class="panel">
+    <h2>Geschil</h2>
+    <p>{{ m.dispute_badge(dispute.status) }}</p>
+    <p class="small-muted" style="margin:10px 0;">{{ dispute.description }}</p>
+    <a href="{{ url_for('web.dispute_detail', dispute_id=dispute.id) }}" class="btn btn-outline btn-sm">Geschil bekijken</a>
+  </div>
+  {% endif %}
+
+  <div class="panel">
+    <h2>Tijdlijn</h2>
+    <ul class="timeline">
+      {% for h in history %}
+      <li>
+        <div class="t-title">{{ h.from_status or 'aangemaakt' }} → {{ h.to_status }}</div>
+        <div class="t-meta">{{ h.created_at | datetimeformat }}{% if h.reason %} · {{ h.reason }}{% endif %}</div>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+{% endblock %}
+{% block extra_scripts %}
+<script>
+(function () {
+  const orderId = {{ order.id | tojson }};
+
+  const payBtn = document.getElementById('payBtn');
+  if (payBtn) payBtn.addEventListener('click', async function () {
+    const err = document.getElementById('payError');
+    SecondScent.hideFormError(err);
+    const { ok, data } = await SecondScent.ssJson('/orders/' + orderId + '/dev-pay', { method: 'POST' });
+    if (!ok) { SecondScent.showFormError(err, data.message || 'Mislukt.'); return; }
+    window.location.reload();
+  });
+
+  const shipForm = document.getElementById('shipForm');
+  if (shipForm) shipForm.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const err = document.getElementById('shipError');
+    SecondScent.hideFormError(err);
+    const { ok, data } = await SecondScent.ssJson('/orders/' + orderId + '/ship', {
+      method: 'POST', json: { carrier: shipForm.carrier.value.trim(), tracking_number: shipForm.tracking_number.value.trim() },
+    });
+    if (!ok) { SecondScent.showFormError(err, data.message || 'Mislukt.'); return; }
+    window.location.reload();
+  });
+
+  const markDeliveredBtn = document.getElementById('markDeliveredBtn');
+  if (markDeliveredBtn) markDeliveredBtn.addEventListener('click', async function () {
+    const err = document.getElementById('deliverError');
+    SecondScent.hideFormError(err);
+    const { ok, data } = await SecondScent.ssJson('/orders/' + orderId + '/mark-delivered', { method: 'POST' });
+    if (!ok) { SecondScent.showFormError(err, data.message || 'Mislukt.'); return; }
+    window.location.reload();
+  });
+
+  const confirmBtn = document.getElementById('confirmBtn');
+  if (confirmBtn) confirmBtn.addEventListener('click', async function () {
+    const err = document.getElementById('confirmError');
+    SecondScent.hideFormError(err);
+    const { ok, data } = await SecondScent.ssJson('/orders/' + orderId + '/confirm', { method: 'POST' });
+    if (!ok) { SecondScent.showFormError(err, data.message || 'Mislukt.'); return; }
+    window.location.reload();
+  });
+
+  const issueForm = document.getElementById('issueForm');
+  if (issueForm) issueForm.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const err = document.getElementById('issueError');
+    SecondScent.hideFormError(err);
+    const { ok, data } = await SecondScent.ssJson('/orders/' + orderId + '/report-issue', {
+      method: 'POST', json: { reason: issueForm.reason.value, description: issueForm.description.value.trim() },
+    });
+    if (!ok) { SecondScent.showFormError(err, data.message || 'Mislukt.'); return; }
+    window.location.href = '/geschillen/' + data.dispute_id;
+  });
+
+  const counterfeitForm = document.getElementById('counterfeitForm');
+  if (counterfeitForm) counterfeitForm.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const err = document.getElementById('counterfeitError');
+    SecondScent.hideFormError(err);
+    const { ok, data } = await SecondScent.ssJson('/orders/' + orderId + '/report-counterfeit', {
+      method: 'POST', json: { description: counterfeitForm.description.value.trim() },
+    });
+    if (!ok) { SecondScent.showFormError(err, data.message || 'Mislukt.'); return; }
+    window.location.href = '/geschillen/' + data.dispute_id;
+  });
+})();
+</script>
+{% endblock %}

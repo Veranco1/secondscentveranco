@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% import "macros.html" as m %}
+{% block title %}Reviewwachtrij — SecondScent Beheer{% endblock %}
+{% block content %}
+<div class="wrap">
+  <div class="page-head"><h1>Beheer</h1></div>
+  <div class="dash-layout">
+    <nav class="dash-nav">
+      <a href="{{ url_for('web.admin_queue') }}" class="is-active">Reviewwachtrij</a>
+      <a href="{{ url_for('web.admin_disputes') }}">Geschillen</a>
+      <a href="{{ url_for('web.admin_intelligence') }}">Intelligence</a>
+      <a href="{{ url_for('web.admin_config') }}">Instellingen</a>
+    </nav>
+    <div>
+      <div class="summary-row">
+        <div class="summary-tile"><span class="num">{{ queue | length }}</span><span class="label">Advertenties in review</span></div>
+        <div class="summary-tile"><span class="num">{{ open_disputes }}</span><span class="label">Open geschillen</span></div>
+      </div>
+      {% if queue %}
+      <div class="table-wrap">
+        <table class="data">
+          <thead><tr><th>Parfum</th><th>Prijs</th><th>Risico</th><th>Ingediend</th><th></th></tr></thead>
+          <tbody>
+            {% for r in queue %}
+            <tr>
+              <td>{{ r.brand }} {{ r.perfume_name }}</td>
+              <td>{{ m.money(r.asking_price_cents) }}</td>
+              <td>{{ m.risk_pill(r.risk_band) }} {{ r.risk_score if r.risk_score is not none else '' }}</td>
+              <td>{{ r.created_at | datetimeformat }}</td>
+              <td><a href="{{ url_for('web.admin_review_case', listing_id=r.listing_id) }}" class="btn btn-outline btn-sm">Beoordelen</a></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state"><h3>Niets te beoordelen</h3></div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

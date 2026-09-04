@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% import "macros.html" as m %}
+{% block title %}Mijn aankopen — SecondScent{% endblock %}
+{% block content %}
+<div class="wrap">
+  <div class="page-head"><h1>Mijn aankopen</h1></div>
+  {% if orders %}
+  <div class="table-wrap">
+    <table class="data">
+      <thead><tr><th>Parfum</th><th>Status</th><th>Totaal</th><th>Besteld op</th><th></th></tr></thead>
+      <tbody>
+        {% for o in orders %}
+        <tr>
+          <td>{{ o.brand }} {{ o.perfume_name }}</td>
+          <td>{{ m.order_badge(o.status) }}</td>
+          <td>{{ m.money(o.total_price_cents) }}</td>
+          <td>{{ o.created_at | int | datetimeformat }}</td>
+          <td><a href="{{ url_for('web.account_order_detail', order_id=o.id) }}" class="btn btn-outline btn-sm">Bekijken</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <h3>Nog geen aankopen</h3>
+    <p><a href="{{ url_for('web.index') }}" style="color:var(--orange); font-weight:600;">Bekijk het aanbod</a></p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

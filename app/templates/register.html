@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Account aanmaken — SecondScent{% endblock %}
+{% block content %}
+<div class="wrap-narrow">
+  <div class="page-head">
+    <h1>Account aanmaken</h1>
+    <p>Gratis, en nodig om te kopen, te verkopen of te reageren op een advertentie.</p>
+  </div>
+  <div class="panel">
+    <form id="registerForm">
+      <div class="field">
+        <label for="display_name">Naam</label>
+        <input type="text" id="display_name" name="display_name" required autocomplete="name">
+      </div>
+      <div class="field">
+        <label for="email">E-mailadres</label>
+        <input type="email" id="email" name="email" required autocomplete="email">
+      </div>
+      <div class="field">
+        <label for="password">Wachtwoord</label>
+        <input type="password" id="password" name="password" required minlength="8" autocomplete="new-password">
+        <div class="hint">Minimaal 8 tekens.</div>
+      </div>
+      <div class="flash flash-error" id="formError" hidden></div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-orange">Account aanmaken</button>
+        <a href="{{ url_for('web.login', next=next) }}" class="btn btn-outline">Ik heb al een account</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+{% block extra_scripts %}
+<script>
+(function () {
+  const form = document.getElementById('registerForm');
+  const err = document.getElementById('formError');
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    SecondScent.hideFormError(err);
+    const payload = {
+      display_name: form.display_name.value.trim(),
+      email: form.email.value.trim(),
+      password: form.password.value,
+    };
+    const { ok, data } = await SecondScent.ssJson('/auth/register', { method: 'POST', json: payload });
+    if (!ok) {
+      const messages = {
+        invalid_email: 'Vul een geldig e-mailadres in.',
+        weak_password: 'Wachtwoord moet minimaal 8 tekens zijn.',
+        missing_display_name: 'Vul je naam in.',
+        registration_failed: 'Kon geen account aanmaken met deze gegevens.',
+      };
+      SecondScent.showFormError(err, messages[data.error] || 'Er ging iets mis. Probeer het opnieuw.');
+      return;
+    }
+    window.location.href = {{ (next or url_for('web.index')) | tojson }};
+  });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,29 @@
+# Fase 1 (accounts & auth) + Buyer Protection + Authenticity & Anti-
+# Counterfeit — alles hieronder tot de streep draait al, hier getest, met
+# de ingebouwde sqlite3-devlaag (app/db.py).
+Flask>=3.0
+Werkzeug>=3.0
+
+# Authenticity & Anti-Counterfeit — echte beeldanalyse (hash/EXIF/
+# wazigheid/ELA, zie app/authenticity/photo_integrity.py), geen externe
+# AI-API.
+Pillow>=10.0
+numpy>=1.26
+
+# ---- vanaf hier: nodig zodra latere fases erbij komen -----------------
+# Fase 0/2+: echte PostgreSQL-laag i.p.v. de sqlite3-devlaag
+psycopg[binary]>=3.1
+SQLAlchemy>=2.0
+alembic>=1.13
+
+# Fase 4: Stripe Connect
+stripe>=10.0
+
+# Fase 4/5: achtergrondwerker (payout na inspectieperiode, herinneringen)
+celery>=5.4
+redis>=5.0
+
+# Productie webserver
+gunicorn>=22.0
+
+python-dotenv>=1.0

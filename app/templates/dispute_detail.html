@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+{% import "macros.html" as m %}
+{% block title %}Geschil — SecondScent{% endblock %}
+{% block content %}
+<div class="wrap-narrow">
+  <div class="page-head">
+    <div class="crumb"><a href="{{ url_for('web.account_order_detail', order_id=order.id) }}">Bestelling</a> / Geschil</div>
+    <h1>{{ listing.brand }} {{ listing.perfume_name }}</h1>
+    <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
+      {{ m.dispute_badge(dispute.status) }}
+      {{ m.order_badge(order.status) }}
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Melding</h2>
+    <p class="small-muted">Reden: {{ dispute.reason }}</p>
+    <p style="margin-top:10px;">{{ dispute.description }}</p>
+    {% if report %}
+    <p class="small-muted" style="margin-top:10px;">
+      Dit is een authenticiteitsmelding.
+      {% if is_admin %}<a href="{{ url_for('web.admin_report_detail', report_id=report.id) }}" style="color:var(--orange); font-weight:600;">Bekijk vergelijking met de originele advertentie →</a>{% endif %}
+    </p>
+    {% endif %}
+    {% if dispute.status == 'resolved' %}
+    <hr class="divider">
+    <p><strong>Uitkomst:</strong> {{ dispute.resolution_notes or '—' }}</p>
+    {% endif %}
+  </div>
+
+  {% if is_buyer and order.status == 'return_required' %}
+  <div class="panel">
+    <h2>Retour verzenden</h2>
+    <form id="returnForm">
+      <div class="field"><label for="tracking_number">Trackingnummer</label><input type="text" id="tracking_number" name="tracking_number" required></div>
+      <div class="flash flash-error" id="returnError" hidden></div>
+      <button type="submit" class="btn btn-outline">Markeer retour als verzonden</button>
+    </form>
+  </div>
+  {% endif %}
+
+  {% if dispute.status == 'open' %}
+  <div class="panel">
+    <h2>Toelichting toevoegen</h2>
+    <p class="small-muted" style="margin-bottom:10px;">Foto-bewijs voor een geschil verloopt in deze versie buiten de site om (er is nog geen losse upload-voorziening voor geschillen — alleen voor advertentiefoto's); hieronder kun je wel een schriftelijke toelichting toevoegen.</p>
+    <form id="evidenceForm">
+      <div class="field"><textarea id="evidence_text" required placeholder="Voeg een toelichting toe…"></textarea></div>
+      <div class="flash flash-error" id="evidenceError" hidden></div>
+      <button type="submit" class="btn btn-outline btn-sm">Toevoegen</button>
+    </form>
+  </div>
+  {% endif %}
+
+  {% if evidence %}
+  <div class="panel">
+    <h2>Bewijs</h2>
+    {% for e in evidence %}
+    <div style="padding:10px 0; border-bottom:1px solid var(--line);">
+      <div class="small-muted">{{ e.evidence_type }} · {{ e.created_at | datetimeformat }}</div>
+      {% if e.text_value %}<p>{{ e.text_value }}</p>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="panel">
+    <h2>Berichten</h2>
+    <div class="msg-thread">
+      {% for msg in messages %}
+      <div class="msg {{ 'is-me' if (is_buyer and msg.sender_id == order.buyer_id) or (is_seller and msg.sender_id == order.seller_id) }}">
+        <div>{{ msg.body }}</div>
+        <div class="msg-meta">{{ msg.display_name }} · {{ msg.created_at | datetimeformat }}</div>
+      </div>
+      {% else %}
+      <p class="small-muted">Nog geen berichten.</p>
+      {% endfor %}
+    </div>
+    {% if not is_admin %}
+    <form id="messageForm">
+      <div class="field"><textarea id="message_body" required placeholder="Typ een bericht…" style="min-height:70px;"></textarea></div>
+      <div class="flash flash-error" id="messageError" hidden></div>
+      <button type="submit" class="btn btn-orange btn-sm">Versturen</button>
+    </form>
+    {% endif %}
+  </div>
+
+  {% if is_admin %}
+  <div class="panel">
+    <h2>Beheerdersnotities (niet zichtbaar voor koper/verkoper)</h2>
+    {% for n in admin_notes %}
+    <div style="padding:8px 0; border-bottom:1px solid var(--line);">
+      <p>{{ n.note }}</p>
+      <div class="small-muted">{{ n.created_at | datetimeformat }}</div>
+    </div>
+    {% endfor %}
+    <form id="adminNoteForm" style="margin-top:14px;">
+      <div class="field"><textarea id="admin_note" required></textarea></div>
+      <div class="flash flash-error" id="adminNoteError" hidden></div>
+      <button type="submit" class="btn btn-outline btn-sm">Notitie toevoegen</button>
+    </form>
+  </div>
+
+  {% if dispute.status == 'open' %}
+  <div class="panel">
+    <h2>Geschil afhandelen</h2>
+    <form id="resolveForm">
+      <div class="field">
+        <label for="resolution">Uitkomst</label>
+        <select id="resolution" name="resolution" required>
+          <option value="release_to_seller">Vrijgeven aan verkoper</option>
+          <option value="refund_full">Volledig terugbetalen</option>
+          <option value="refund_partial">Deels terugbetalen</option>
+          <option value="require_return">Retour vereisen</option>
+        </select>
+      </div>
+      <div class="field" id="refundAmountField" hidden>
+        <label for="refund_amount">Terug te betalen bedrag (€)</label>
+        <input type="number" id="refund_amount" step="0.01" min="0.01">
+      </div>
+      <div class="field"><label for="resolve_notes">Toelichting</label><textarea id="resolve_notes"></textarea></div>
+      <div class="flash flash-error" id="resolveError" hidden></div>
+      <button type="submit" class="btn btn-danger">Afhandelen</button>
+    </form>
+  </div>
+  {% endif %}
+  {% endif %}
+</div>
+{% endblock %}
+{% block extra_scripts %}
+<script>
+(function () {
+  const disputeId = {{ dispute.id | tojson }};
+
+  const messageForm = document.getElementById('messageForm');
+  if (messageForm) messageForm.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const err = document.getElementById('messageError');
+    SecondScent.hideFormError(err);
+    const { ok, data } = await SecondScent.ssJson('/disputes/' + disputeId + '/messages', {
+      method: 'POST', json: { body: document.getElementById('message_body').value.trim() },
+    });
+    if (!ok) { SecondScent.showFormError(err, data.message || 'Mislukt.'); return; }
+    window.location.reload();
+  });
+
+  const evidenceForm = document.getElementById('evidenceForm');
+  if (evidenceForm) evidenceForm.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const err = document.getElementById('evidenceError');
+    SecondScent.hideFormError(err);
+    const { ok, data } = await SecondScent.ssJson('/disputes/' + disputeId + '/evidence', {
+      method: 'POST', json: { evidence_type: 'description', text_value: document.getElementById('evidence_text').value.trim() },
+    });
+    if (!ok) { SecondScent.showFormError(err, data.message || 'Mislukt.'); return; }
+    window.location.reload();
+  });
+
+  const returnForm = document.getElementById('returnForm');
+  if (returnForm) returnForm.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const err = document.getElementById('returnError');
+    SecondScent.hideFormError(err);
+    const { ok, data } = await SecondScent.ssJson('/disputes/' + disputeId + '/return-shipped', {
+      method: 'POST', json: { tracking_number: returnForm.tracking_number.value.trim() },
+    });
+    if (!ok) { SecondScent.showFormError(err, data.message || 'Mislukt.'); return; }
+    window.location.reload();
+  });
+
+  const adminNoteForm = document.getElementById('adminNoteForm');
+  if (adminNoteForm) adminNoteForm.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const err = document.getElementById('adminNoteError');
+    SecondScent.hideFormError(err);
+    const { ok, data } = await SecondScent.ssJson('/disputes/' + disputeId + '/admin-notes', {
+      method: 'POST', json: { note: document.getElementById('admin_note').value.trim() },
+    });
+    if (!ok) { SecondScent.showFormError(err, data.message || 'Mislukt.'); return; }
+    window.location.reload();
+  });
+
+  const resolutionSelect = document.getElementById('resolution');
+  const refundField = document.getElementById('refundAmountField');
+  if (resolutionSelect) resolutionSelect.addEventListener('change', function () {
+    refundField.hidden = resolutionSelect.value !== 'refund_partial';
+  });
+
+  const resolveForm = document.getElementById('resolveForm');
+  if (resolveForm) resolveForm.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const err = document.getElementById('resolveError');
+    SecondScent.hideFormError(err);
+    const payload = { resolution: resolutionSelect.value, notes: document.getElementById('resolve_notes').value.trim() };
+    if (resolutionSelect.value === 'refund_partial') {
+      payload.refund_amount_cents = Math.round(parseFloat(document.getElementById('refund_amount').value) * 100);
+    }
+    const { ok, data } = await SecondScent.ssJson('/disputes/' + disputeId + '/resolve', { method: 'POST', json: payload });
+    if (!ok) { SecondScent.showFormError(err, data.message || 'Mislukt.'); return; }
+    window.location.reload();
+  });
+})();
+</script>
+{% endblock %}

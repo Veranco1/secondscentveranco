@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Inloggen — SecondScent{% endblock %}
+{% block content %}
+<div class="wrap-narrow">
+  <div class="page-head">
+    <h1>Inloggen</h1>
+  </div>
+  <div class="panel">
+    <form id="loginForm">
+      <div class="field">
+        <label for="email">E-mailadres</label>
+        <input type="email" id="email" name="email" required autocomplete="email">
+      </div>
+      <div class="field">
+        <label for="password">Wachtwoord</label>
+        <input type="password" id="password" name="password" required autocomplete="current-password">
+      </div>
+      <div class="flash flash-error" id="formError" hidden></div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-orange">Inloggen</button>
+        <a href="{{ url_for('web.register', next=next) }}" class="btn btn-outline">Nieuw account aanmaken</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+{% block extra_scripts %}
+<script>
+(function () {
+  const form = document.getElementById('loginForm');
+  const err = document.getElementById('formError');
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    SecondScent.hideFormError(err);
+    const payload = { email: form.email.value.trim(), password: form.password.value };
+    const { ok, data, status } = await SecondScent.ssJson('/auth/login', { method: 'POST', json: payload });
+    if (!ok) {
+      const messages = {
+        invalid_credentials: 'E-mailadres of wachtwoord onjuist.',
+        account_not_active: 'Dit account is niet actief.',
+        too_many_attempts: 'Te veel mislukte pogingen. Probeer het over 15 minuten opnieuw.',
+      };
+      SecondScent.showFormError(err, messages[data.error] || 'Er ging iets mis. Probeer het opnieuw.');
+      return;
+    }
+    window.location.href = {{ (next or url_for('web.index')) | tojson }};
+  });
+})();
+</script>
+{% endblock %}

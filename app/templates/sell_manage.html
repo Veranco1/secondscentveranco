@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% import "macros.html" as m %}
+{% block title %}{{ listing.brand }} {{ listing.perfume_name }} beheren — SecondScent{% endblock %}
+{% block content %}
+<div class="wrap">
+  <div class="page-head">
+    <div class="crumb"><a href="{{ url_for('web.seller_dashboard') }}">Mijn advertenties</a> / {{ listing.brand }} {{ listing.perfume_name }}</div>
+    <h1>{{ listing.brand }} {{ listing.perfume_name }}</h1>
+  </div>
+
+  <div class="panel">
+    <div style="margin-bottom:10px;">{{ m.verification_badge(listing.verification_status) }}</div>
+    <p class="status-explain" id="statusExplain">{{ status_explanation }}</p>
+    {% if listing.status == 'active' %}
+      <p class="small-muted" style="margin-top:8px;"><a href="{{ url_for('web.listing_detail', listing_id=listing.id) }}" style="color:var(--orange); font-weight:600;">Bekijk live advertentie →</a></p>
+    {% endif %}
+  </div>
+
+  {% if can_upload %}
+  <div class="panel">
+    <h2>Bewijsfoto's</h2>
+    <div class="upload-instructions">{{ upload_instructions }}</div>
+
+    <div class="photo-grid">
+      {% for cat, meta in category_meta.items() %}
+      {% set label, required_always, required_if_box = meta %}
+      {% set existing = photos_by_cat.get(cat) %}
+      <div class="photo-slot {{ 'has-photo' if existing }}" data-category="{{ cat }}">
+        <div class="cat-label">{{ label }}</div>
+        {% if required_always %}
+          <span class="req-tag">Verplicht</span>
+        {% elif required_if_box %}
+          <span class="req-tag">Verplicht als doos aangevinkt</span>
+        {% else %}
+          <span class="opt-tag">Optioneel</span>
+        {% endif %}
+        <div class="preview" data-role="preview">
+          {% if existing %}
+            <img src="{{ url_for('listings.get_photo_file', listing_id=listing.id, photo_id=existing.id) }}" alt="{{ label }}">
+          {% endif %}
+        </div>
+        <input type="file" accept="image/*" data-role="file">
+        {% if cat in ('batch_code_bottle', 'batch_code_packaging') %}
+          <input type="text" class="code-input" placeholder="Overgetypte code" data-role="code"
+                 value="{{ existing.seller_entered_code if existing else '' }}">
+        {% endif %}
+        <button type="button" class="btn btn-outline slot-btn" data-role="upload">
+          {{ 'Vervangen' if existing else 'Uploaden' }}
+        </button>
+        <div class="warn-text" data-role="warning" hidden></div>
+        <div class="ok-text" data-role="success" hidden>Geüpload</div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <hr class="divider">
+    <button type="button" id="submitReviewBtn" class="btn btn-orange">Indienen voor controle</button>
+    <div class="flash flash-error" id="submitError" hidden style="margin-top:14px;"></div>
+    <div class="flash flash-success" id="submitSuccess" hidden style="margin-top:14px;"></div>
+  </div>
+  {% else %}
+  <div class="panel">
+    <p class="small-muted">Foto's kunnen niet worden aangepast in de huidige status ({{ listing.verification_status }}). Foto's zijn alleen te wijzigen zolang de advertentie een concept is, of terwijl SecondScent aanvullend bewijs vraagt.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+{% block extra_scripts %}
+<script>
+(function () {
+  const listingId = {{ listing.id | tojson }};
+
+  document.querySelectorAll('.photo-slot').forEach(function (slot) {
+    const category = slot.dataset.category;
+    const fileInput = slot.querySelector('[data-role=file]');
+    const codeInput = slot.querySelector('[data-role=code]');
+    const uploadBtn = slot.querySelector('[data-role=upload]');
+    const preview = slot.querySelector('[data-role=preview]');
+    const warning = slot.querySelector('[data-role=warning]');
+    const success = slot.querySelector('[data-role=success]');
+
+    uploadBtn.addEventListener('click', async function () {
+      warning.hidden = true; success.hidden = true;
+      if (!fileInput.files.length) {
+        warning.hidden = false; warning.textContent = 'Kies eerst een foto.';
+        return;
+      }
+      const fd = new FormData();
+      fd.append('category', category);
+      fd.append('file', fileInput.files[0]);
+      if (codeInput && codeInput.value.trim()) fd.append('seller_entered_code', codeInput.value.trim());
+
+      uploadBtn.disabled = true;
+      uploadBtn.textContent = 'Uploaden…';
+      const res = await SecondScent.ssFetch('/listings/' + listingId + '/photos', { method: 'POST', body: fd });
+      const data = await res.json().catch(function () { return {}; });
+      uploadBtn.disabled = false;
+      uploadBtn.textContent = 'Vervangen';
+      if (!res.ok) {
+        warning.hidden = false;
+        warning.textContent = data.message || 'Uploaden mislukt. Probeer een andere foto.';
+        return;
+      }
+      slot.classList.add('has-photo');
+      preview.innerHTML = '<img src="/listings/' + listingId + '/photos/' + data.photo_id + '/file" alt="">';
+      if (data.warnings && data.warnings.length) {
+        warning.hidden = false;
+        warning.textContent = data.warnings.join(' ');
+      } else {
+        success.hidden = false;
+      }
+    });
+  });
+
+  document.getElementById('submitReviewBtn').addEventListener('click', async function () {
+    const err = document.getElementById('submitError');
+    const ok = document.getElementById('submitSuccess');
+    err.hidden = true; ok.hidden = true;
+    const { ok: success, data } = await SecondScent.ssJson('/listings/' + listingId + '/submit-for-review', { method: 'POST' });
+    if (!success) {
+      err.hidden = false;
+      err.textContent = data.message || 'Indienen mislukt.';
+      return;
+    }
+    ok.hidden = false;
+    ok.textContent = 'Ingediend. Status: ' + data.verification_status + (data.published ? ' — advertentie is live.' : ' — nog niet zichtbaar voor kopers.');
+    setTimeout(function () { window.location.reload(); }, 1400);
+  });
+})();
+</script>
+{% endblock %}
